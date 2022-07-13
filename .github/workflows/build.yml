@@ -39,6 +39,8 @@ jobs:
         cargo install simple-http-server --root http-server-vendor/http-server-macos --no-track
         mv http-server-vendor/bin/simple-http-server http-server-vendor/http-server-macos
 
+    - run: ls http-server-vendor
+
     - name: Build
       run: cargo b
 

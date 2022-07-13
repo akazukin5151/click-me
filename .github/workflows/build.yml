@@ -12,8 +12,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            asset_name: click-me
           - os: macos-latest
+            asset_name: click-me
           - os: windows-latest
+            asset_name: click-me.exe
 
     steps:
     - name: Checkout
@@ -30,6 +33,11 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
 
+    - name: mac - install simple-http-server
+      run: |
+        cargo install simple-http-server --root http-server-vendor/http-server-macos --no-track
+        mv http-server-vendor/bin/simple-http-server http-server-vendor/http-server-macos
+
     - name: Build
       run: cargo b
 
@@ -37,4 +45,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: click-me-${{ runner.os }}
-        path: target/debug/click-me
+        path: target/debug/${{ matrix.asset_name }}

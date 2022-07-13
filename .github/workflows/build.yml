@@ -35,9 +35,8 @@ jobs:
 
     - name: mac - install simple-http-server
       if: matrix.os == 'macos-latest'
-      run: |
+      run:
         cargo install simple-http-server --root http-server-vendor/http-server-macos --no-track
-        mv http-server-vendor/bin/simple-http-server http-server-vendor/http-server-macos
 
     - run: ls -R http-server-vendor
 

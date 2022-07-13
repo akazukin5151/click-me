@@ -14,7 +14,7 @@ fn include_bin() -> &'static [u8] {
 
 #[cfg(target_os = "macos")]
 fn include_bin() -> &'static [u8] {
-    include_bytes!("../http-server-vendor/http-server-macos")
+    include_bytes!("../http-server-vendor/bin/simple-http-server")
 }
 
 #[cfg(target_os = "windows")]

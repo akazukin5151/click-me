@@ -4,6 +4,7 @@ use std::process::ExitStatus;
 use std::process::Command;
 use std::fs;
 use std::thread;
+use std::env;
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -52,6 +53,10 @@ fn main() {
     let exe = include_bin();
     fs::write(EXE_PATH, exe).unwrap();
     set_executable(EXE_PATH);
+
+    let exe_path = env::current_exe().unwrap();
+    let exe_dir = exe_path.parent().unwrap();
+    env::set_current_dir(exe_dir).unwrap();
 
     thread::spawn(move || {
         thread::sleep(Duration::new(0, 10));

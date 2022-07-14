@@ -33,13 +33,6 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-    - name: mac - install simple-http-server
-      if: matrix.os == 'macos-latest'
-      run:
-        cargo install simple-http-server --root http-server-vendor/http-server-macos --no-track
-
-    - run: ls -R http-server-vendor
-
     - name: Build
       run: cargo b
 

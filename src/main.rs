@@ -25,15 +25,19 @@ fn include_bin() -> &'static [u8] {
 }
 
 #[cfg(unix)]
-fn set_executable(path: &PathBuf) {
-    let file = fs::File::open(path).unwrap();
-    let mut p = file.metadata().unwrap().permissions();
+fn set_executable(path: &PathBuf) -> Result<(), String> {
+    let file = fs::File::open(path).map_err(|e| format!("Open file failed: {}", e))?;
+    let mut p = file.metadata()
+        .map_err(|e| format!("File metadata failed: {}", e))?
+        .permissions();
     p.set_mode(755);
-    fs::set_permissions(path, p).unwrap();
+    fs::set_permissions(path, p).map_err(|e| format!("Set permissions failed: {}", e))?;
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]
-fn set_executable(path: &PathBuf) {
+fn set_executable(path: &PathBuf) -> Result<(), String> {
+    Ok(())
 }
 
 fn execute_bin(path: PathBuf) -> Result<ExitStatus, &'static str> {
@@ -46,22 +50,34 @@ const EXE_NAME: &'static str = "http-server";
 #[cfg(target_os = "windows")]
 const EXE_NAME: &'static str = "http-server.exe";
 
-fn main() {
-    let exe_path = dirs::cache_dir().unwrap().join(EXE_NAME);
+fn main() -> Result<(), String> {
+    let exe_path = dirs::cache_dir()
+        .ok_or("Get cache dir failed")?
+        .join(EXE_NAME);
+
     if exe_path.exists() {
-        fs::remove_file(&exe_path).unwrap();
+        fs::remove_file(&exe_path)
+            .map_err(|e| format!("Failed to remove file: {}", e))?;
     };
     let exe = include_bin();
-    fs::write(&exe_path, exe).unwrap();
-    set_executable(&exe_path);
+    fs::write(&exe_path, exe)
+        .map_err(|e| format!("Failed to write exe: {}", e))?;
+    set_executable(&exe_path)?;
 
-    let current_exe_path = env::current_exe().unwrap();
-    let current_exe_dir = current_exe_path.parent().unwrap();
-    env::set_current_dir(current_exe_dir).unwrap();
+    let current_exe_path = env::current_exe()
+        .map_err(|e| format!("Get current exe failed: {}", e))?;
+    let current_exe_dir = current_exe_path.parent()
+        .ok_or("Get current exe parent failed")?;
+    env::set_current_dir(current_exe_dir)
+        .map_err(|e| format!("Setting current dir failed: {}", e))?;
 
     thread::spawn(move || {
         thread::sleep(Duration::new(0, 10));
-        open::that("http://0.0.0.0:8000/index.html").unwrap();
+        open::that("http://0.0.0.0:8000/index.html")
+            .map_err(|e| format!("Failed to open url: {}", e)).unwrap();
     });
-    execute_bin(exe_path).unwrap();
+    execute_bin(exe_path)
+        .map_err(|e| format!("Failed to execute bin: {}", e))?;
+
+    Ok(())
 }

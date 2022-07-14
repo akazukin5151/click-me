@@ -1,3 +1,4 @@
+use std::time::Duration;
 use std::path::Path;
 use std::process::ExitStatus;
 use std::process::Command;
@@ -51,8 +52,10 @@ fn main() {
     let exe = include_bin();
     fs::write(EXE_PATH, exe).unwrap();
     set_executable(EXE_PATH);
+
     thread::spawn(move || {
-        execute_bin(EXE_PATH).unwrap();
+        thread::sleep(Duration::new(0, 10));
+        open::that("http://0.0.0.0:8000/index.html").unwrap();
     });
-    open::that("http://0.0.0.0:8000/index.html").unwrap();
+    execute_bin(EXE_PATH).unwrap();
 }

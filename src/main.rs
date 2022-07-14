@@ -1,5 +1,5 @@
+use std::path::PathBuf;
 use std::time::Duration;
-use std::path::Path;
 use std::process::ExitStatus;
 use std::process::Command;
 use std::fs;
@@ -25,7 +25,7 @@ fn include_bin() -> &'static [u8] {
 }
 
 #[cfg(unix)]
-fn set_executable(path: &'static str) {
+fn set_executable(path: &PathBuf) {
     let file = fs::File::open(path).unwrap();
     let mut p = file.metadata().unwrap().permissions();
     p.set_mode(755);
@@ -33,34 +33,35 @@ fn set_executable(path: &'static str) {
 }
 
 #[cfg(target_os = "windows")]
-fn set_executable(path: &'static str) {
+fn set_executable(path: &PathBuf) {
 }
 
-fn execute_bin(path: &'static str) -> Result<ExitStatus, &str> {
+fn execute_bin(path: PathBuf) -> Result<ExitStatus, &'static str> {
     Command::new(path).arg("--cors").status().map_err(|_| "Failed to launch command")
 }
 
 #[cfg(unix)]
-const EXE_PATH: &'static str = "/tmp/http-server";
+const EXE_NAME: &'static str = "http-server";
 
 #[cfg(target_os = "windows")]
-const EXE_PATH: &'static str = "/tmp/http-server.exe";
+const EXE_NAME: &'static str = "http-server.exe";
 
 fn main() {
-    if Path::new(EXE_PATH).exists() {
-        fs::remove_file(EXE_PATH).unwrap();
+    let exe_path = dirs::cache_dir().unwrap().join(EXE_NAME);
+    if exe_path.exists() {
+        fs::remove_file(&exe_path).unwrap();
     };
     let exe = include_bin();
-    fs::write(EXE_PATH, exe).unwrap();
-    set_executable(EXE_PATH);
+    fs::write(&exe_path, exe).unwrap();
+    set_executable(&exe_path);
 
-    let exe_path = env::current_exe().unwrap();
-    let exe_dir = exe_path.parent().unwrap();
-    env::set_current_dir(exe_dir).unwrap();
+    let current_exe_path = env::current_exe().unwrap();
+    let current_exe_dir = current_exe_path.parent().unwrap();
+    env::set_current_dir(current_exe_dir).unwrap();
 
     thread::spawn(move || {
         thread::sleep(Duration::new(0, 10));
         open::that("http://0.0.0.0:8000/index.html").unwrap();
     });
-    execute_bin(EXE_PATH).unwrap();
+    execute_bin(exe_path).unwrap();
 }

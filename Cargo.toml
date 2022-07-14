@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 open = "3.0.1"
+dirs = "4.0"
